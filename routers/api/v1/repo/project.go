@@ -425,6 +425,10 @@ func CreateProjectColumn(ctx *context.APIContext) {
 		CreatorID: ctx.Doer.ID,
 	}
 
+	if form.StatusChange != nil {
+		column.StatusChange = project_model.ColumnStatusChangeType(*form.StatusChange)
+	}
+
 	if err := project_model.NewColumn(ctx, column); err != nil {
 		ctx.APIErrorInternal(err)
 		return
@@ -504,6 +508,9 @@ func EditProjectColumn(ctx *context.APIContext) {
 	}
 	if form.Color != nil {
 		column.Color = *form.Color
+	}
+	if form.StatusChange != nil {
+		column.StatusChange = project_model.ColumnStatusChangeType(*form.StatusChange)
 	}
 
 	if err := project_model.UpdateColumn(ctx, column); err != nil {

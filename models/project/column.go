@@ -34,16 +34,33 @@ const (
 	CardTypeImagesAndText
 )
 
+type (
+	// ColumnStatusChangeType is used to represent the automatic status change when an issue is moved to a column
+	ColumnStatusChangeType int8
+)
+
+const (
+	// ColumnStatusChangeNone means no automatic status change
+	ColumnStatusChangeNone ColumnStatusChangeType = iota
+
+	// ColumnStatusChangeClose means automatically close issues when moved to this column
+	ColumnStatusChangeClose
+
+	// ColumnStatusChangeReopen means automatically reopen issues when moved to this column
+	ColumnStatusChangeReopen
+)
+
 // ColumnColorPattern is a regexp witch can validate ColumnColor
 var ColumnColorPattern = regexp.MustCompile("^#[0-9a-fA-F]{6}$")
 
 // Column is used to represent column on a project
 type Column struct {
-	ID      int64 `xorm:"pk autoincr"`
-	Title   string
-	Default bool   `xorm:"NOT NULL DEFAULT false"` // issues not assigned to a specific column will be assigned to this column
-	Sorting int8   `xorm:"NOT NULL DEFAULT 0"`
-	Color   string `xorm:"VARCHAR(7)"`
+	ID           int64 `xorm:"pk autoincr"`
+	Title        string
+	Default      bool                   `xorm:"NOT NULL DEFAULT false"` // issues not assigned to a specific column will be assigned to this column
+	Sorting      int8                   `xorm:"NOT NULL DEFAULT 0"`
+	Color        string                 `xorm:"VARCHAR(7)"`
+	StatusChange ColumnStatusChangeType `xorm:"NOT NULL DEFAULT 0"` // automatic issue status change when moved to this column
 
 	ProjectID int64 `xorm:"INDEX NOT NULL"`
 	CreatorID int64 `xorm:"NOT NULL"`
@@ -241,6 +258,9 @@ func UpdateColumn(ctx context.Context, column *Column) error {
 		return fmt.Errorf("bad color code: %s", column.Color)
 	}
 	fieldToUpdate = append(fieldToUpdate, "color")
+
+	// Always include status_change in update (it can be set to 0)
+	fieldToUpdate = append(fieldToUpdate, "status_change")
 
 	_, err := db.GetEngine(ctx).ID(column.ID).Cols(fieldToUpdate...).Update(column)
 
