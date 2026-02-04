@@ -532,10 +532,11 @@ func AddColumnToProjectPost(ctx *context.Context) {
 	}
 
 	if err := project_model.NewColumn(ctx, &project_model.Column{
-		ProjectID: project.ID,
-		Title:     form.Title,
-		Color:     form.Color,
-		CreatorID: ctx.Doer.ID,
+		ProjectID:    project.ID,
+		Title:        form.Title,
+		Color:        form.Color,
+		StatusChange: project_model.ColumnStatusChangeType(form.StatusChange),
+		CreatorID:    ctx.Doer.ID,
 	}); err != nil {
 		ctx.ServerError("NewProjectColumn", err)
 		return
@@ -605,6 +606,7 @@ func EditProjectColumn(ctx *context.Context) {
 	if form.Sorting != 0 {
 		column.Sorting = form.Sorting
 	}
+	column.StatusChange = project_model.ColumnStatusChangeType(form.StatusChange)
 
 	if err := project_model.UpdateColumn(ctx, column); err != nil {
 		ctx.ServerError("UpdateProjectColumn", err)

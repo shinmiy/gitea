@@ -56,13 +56,14 @@ func ToAPIProjectList(ctx context.Context, projects []*project_model.Project) []
 // ToAPIProjectColumn converts a project_model.Column to api.ProjectColumn
 func ToAPIProjectColumn(column *project_model.Column) *api.ProjectColumn {
 	return &api.ProjectColumn{
-		ID:        column.ID,
-		Title:     column.Title,
-		Color:     column.Color,
-		ProjectID: column.ProjectID,
-		Default:   column.Default,
-		Created:   column.CreatedUnix.AsTime(),
-		Updated:   column.UpdatedUnix.AsTime(),
+		ID:           column.ID,
+		Title:        column.Title,
+		Color:        column.Color,
+		ProjectID:    column.ProjectID,
+		Default:      column.Default,
+		StatusChange: int8(column.StatusChange),
+		Created:      column.CreatedUnix.AsTime(),
+		Updated:      column.UpdatedUnix.AsTime(),
 	}
 }
 

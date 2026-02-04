@@ -61,6 +61,8 @@ type ProjectColumn struct {
 	Color     string `json:"color"`
 	ProjectID int64  `json:"project_id"`
 	Default   bool   `json:"default"`
+	// Automatic issue status change when moved to this column (0: none, 1: close, 2: reopen)
+	StatusChange int8 `json:"status_change"`
 	// swagger:strfmt date-time
 	Created time.Time `json:"created_at"`
 	// swagger:strfmt date-time
@@ -73,6 +75,8 @@ type CreateProjectColumnOption struct {
 	Title string `json:"title" binding:"Required"`
 	// Color of the column (hex color code)
 	Color string `json:"color"`
+	// Automatic issue status change when moved to this column (0: none, 1: close, 2: reopen)
+	StatusChange *int8 `json:"status_change"`
 }
 
 // EditProjectColumnOption options for editing a project column
@@ -81,6 +85,8 @@ type EditProjectColumnOption struct {
 	Title *string `json:"title"`
 	// Color of the column (hex color code)
 	Color *string `json:"color"`
+	// Automatic issue status change when moved to this column (0: none, 1: close, 2: reopen)
+	StatusChange *int8 `json:"status_change"`
 }
 
 // MoveProjectColumnOption options for moving a project column
