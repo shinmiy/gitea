@@ -470,9 +470,10 @@ type CreateProjectForm struct {
 
 // EditProjectColumnForm is a form for editing a project column
 type EditProjectColumnForm struct {
-	Title   string `binding:"Required;MaxSize(100)"`
-	Sorting int8
-	Color   string `binding:"MaxSize(7)"`
+	Title        string `binding:"Required;MaxSize(100)"`
+	Sorting      int8
+	Color        string `binding:"MaxSize(7)"`
+	StatusChange int8
 }
 
 // CreateMilestoneForm form for creating milestone

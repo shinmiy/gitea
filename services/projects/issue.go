@@ -12,11 +12,19 @@ import (
 	project_model "code.gitea.io/gitea/models/project"
 	user_model "code.gitea.io/gitea/models/user"
 	"code.gitea.io/gitea/modules/optional"
+	issue_service "code.gitea.io/gitea/services/issue"
 )
 
 // MoveIssuesOnProjectColumn moves or keeps issues in a column and sorts them inside that column
 func MoveIssuesOnProjectColumn(ctx context.Context, doer *user_model.User, column *project_model.Column, sortedIssueIDs map[int64]int64) error {
-	return db.WithTx(ctx, func(ctx context.Context) error {
+	// Track issues that need status change (processed outside the transaction)
+	type issueStatusChange struct {
+		issue    *issues_model.Issue
+		isClosed bool
+	}
+	var statusChanges []issueStatusChange
+
+	err := db.WithTx(ctx, func(ctx context.Context) error {
 		issueIDs := make([]int64, 0, len(sortedIssueIDs))
 		for _, issueID := range sortedIssueIDs {
 			issueIDs = append(issueIDs, issueID)
@@ -75,6 +83,18 @@ func MoveIssuesOnProjectColumn(ctx context.Context, doer *user_model.User, colum
 				}); err != nil {
 					return err
 				}
+
+				// Check if auto-close/reopen is needed based on column.StatusChange
+				switch column.StatusChange {
+				case project_model.ColumnStatusChangeClose:
+					if !curIssue.IsClosed {
+						statusChanges = append(statusChanges, issueStatusChange{issue: curIssue, isClosed: true})
+					}
+				case project_model.ColumnStatusChangeReopen:
+					if curIssue.IsClosed {
+						statusChanges = append(statusChanges, issueStatusChange{issue: curIssue, isClosed: false})
+					}
+				}
 			}
 
 			_, err = db.Exec(ctx, "UPDATE `project_issue` SET project_board_id=?, sorting=? WHERE issue_id=?", column.ID, sorting, issueID)
@@ -84,6 +104,24 @@ func MoveIssuesOnProjectColumn(ctx context.Context, doer *user_model.User, colum
 		}
 		return nil
 	})
+	if err != nil {
+		return err
+	}
+
+	// Apply status changes outside the transaction to avoid notification issues
+	for _, change := range statusChanges {
+		if change.isClosed {
+			if err := issue_service.CloseIssue(ctx, change.issue, doer, ""); err != nil {
+				return err
+			}
+		} else {
+			if err := issue_service.ReopenIssue(ctx, change.issue, doer, ""); err != nil {
+				return err
+			}
+		}
+	}
+
+	return nil
 }
 
 // LoadIssuesFromProject load issues assigned to each project column inside the given project

@@ -89,6 +89,7 @@ function initRepoProjectColumnEdit(writableProjectBoard: Element): void {
   const attrDataColumnId = 'data-modal-project-column-id';
   const attrDataColumnTitle = 'data-modal-project-column-title-input';
   const attrDataColumnColor = 'data-modal-project-column-color-input';
+  const attrDataColumnStatusChange = 'data-modal-project-column-status-change';
 
   // the "new" button is not in project board, so need to query from document
   queryElems(document, '.show-project-column-modal-edit', (el) => {
@@ -97,6 +98,10 @@ function initRepoProjectColumnEdit(writableProjectBoard: Element): void {
       elColumnTitle.value = el.getAttribute(attrDataColumnTitle)!;
       elColumnColor.value = el.getAttribute(attrDataColumnColor)!;
       elColumnColor.dispatchEvent(new Event('input', {bubbles: true})); // trigger the color picker
+      const statusChangeValue = el.getAttribute(attrDataColumnStatusChange) ?? '0';
+      // Set the radio button for status_change
+      const radioButton = elForm.querySelector<HTMLInputElement>(`input[name="status_change"][value="${statusChangeValue}"]`);
+      if (radioButton) radioButton.checked = true;
     });
   });
 
@@ -117,10 +122,12 @@ function initRepoProjectColumnEdit(writableProjectBoard: Element): void {
         return;
       }
 
-      // update the newly saved column title and color in the project board (to avoid reload)
+      // update the newly saved column title, color, and status_change in the project board (to avoid reload)
       const elEditButton = writableProjectBoard.querySelector<HTMLButtonElement>(`.show-project-column-modal-edit[${attrDataColumnId}="${columnId}"]`)!;
       elEditButton.setAttribute(attrDataColumnTitle, elColumnTitle.value);
       elEditButton.setAttribute(attrDataColumnColor, elColumnColor.value);
+      const checkedRadio = elForm.querySelector<HTMLInputElement>('input[name="status_change"]:checked');
+      elEditButton.setAttribute(attrDataColumnStatusChange, checkedRadio?.value ?? '0');
 
       const elBoardColumn = writableProjectBoard.querySelector<HTMLElement>(`.project-column[data-id="${columnId}"]`)!;
       const elBoardColumnTitle = elBoardColumn.querySelector<HTMLElement>(`.project-column-title-text`)!;
