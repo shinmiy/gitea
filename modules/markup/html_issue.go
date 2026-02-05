@@ -64,18 +64,35 @@ func fullIssuePatternProcessor(ctx *RenderContext, node *html.Node) {
 		matchOrg := linkParts[len(linkParts)-4]
 		matchRepo := linkParts[len(linkParts)-3]
 
-		if matchOrg == ctx.RenderOptions.Metas["user"] && matchRepo == ctx.RenderOptions.Metas["repo"] {
-			replaceContent(node, m[0], m[1], createLink(ctx, link, text, "ref-issue"))
-		} else {
-			text = matchOrg + "/" + matchRepo + text
-			replaceContent(node, m[0], m[1], createLink(ctx, link, text, "ref-issue"))
+		isSameRepo := matchOrg == ctx.RenderOptions.Metas["user"] && matchRepo == ctx.RenderOptions.Metas["repo"]
+		isComment := m[4] != -1 && m[5] != -1
+
+		var linkNode *html.Node
+		if !isComment {
+			issueIndex := node.Data[m[2]:m[3]]
+			ref := &references.RenderizableReference{Issue: issueIndex}
+			if !isSameRepo {
+				ref.Owner = matchOrg
+				ref.Name = matchRepo
+			}
+			linkHref := "/:root/" + util.URLJoin(matchOrg, matchRepo, linkParts[len(linkParts)-2], issueIndex)
+			linkNode = createIssueLinkContentWithSummary(ctx, linkHref, ref)
 		}
+
+		if linkNode == nil {
+			if !isSameRepo {
+				text = matchOrg + "/" + matchRepo + text
+			}
+			linkNode = createLink(ctx, link, text, "ref-issue")
+		}
+
+		replaceContent(node, m[0], m[1], linkNode)
 		node = node.NextSibling.NextSibling
 	}
 }
 
 func createIssueLinkContentWithSummary(ctx *RenderContext, linkHref string, ref *references.RenderizableReference) *html.Node {
-	if DefaultRenderHelperFuncs.RenderRepoIssueIconTitle == nil {
+	if DefaultRenderHelperFuncs == nil || DefaultRenderHelperFuncs.RenderRepoIssueIconTitle == nil {
 		return nil
 	}
 	issueIndex, _ := strconv.ParseInt(ref.Issue, 10, 64)

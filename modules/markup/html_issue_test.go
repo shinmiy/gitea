@@ -20,11 +20,11 @@ import (
 
 func TestRender_IssueList(t *testing.T) {
 	defer testModule.MockVariableValue(&markup.RenderBehaviorForTesting.DisableAdditionalAttributes, true)()
-	markup.Init(&markup.RenderHelperFuncs{
+	defer testModule.MockVariableValue(&markup.DefaultRenderHelperFuncs, &markup.RenderHelperFuncs{
 		RenderRepoIssueIconTitle: func(ctx context.Context, opts markup.RenderIssueIconTitleOptions) (template.HTML, error) {
 			return htmlutil.HTMLFormat("<div>issue #%d</div>", opts.IssueIndex), nil
 		},
-	})
+	})()
 
 	test := func(input, expected string) {
 		rctx := markup.NewTestRenderContext(markup.TestAppURL, map[string]string{
