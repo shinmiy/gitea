@@ -56,6 +56,7 @@
 								data-modal-project-column-id=""
 								data-modal-project-column-title-input=""
 								data-modal-project-column-color-input=""
+								data-modal-project-column-status-change="0"
 				>
 					{{svg "octicon-plus"}}
 					{{ctx.Locale.Tr "new_project_column"}}
@@ -92,6 +93,7 @@
 									data-modal-project-column-id="{{.ID}}"
 									data-modal-project-column-title-input="{{.Title}}"
 									data-modal-project-column-color-input="{{.Color}}"
+									data-modal-project-column-status-change="{{.StatusChange}}"
 								>
 									{{svg "octicon-pencil"}} {{ctx.Locale.Tr "repo.projects.column.edit"}}
 								</a>
@@ -141,6 +143,14 @@
 				<div class="color-picker-combo" data-global-init="initColorPicker">
 					<input maxlength="7" placeholder="#c320f6" id="project-column-color-input" name="color">
 					{{template "repo/issue/label_precolors"}}
+				</div>
+			</div>
+			<div class="field">
+				<label>{{ctx.Locale.Tr "repo.projects.column.status_change"}}</label>
+				<div class="tw-flex tw-flex-col tw-gap-2">
+					<label class="tw-cursor-pointer"><input type="radio" name="status_change" value="0" checked> {{ctx.Locale.Tr "repo.projects.column.status_change_none"}}</label>
+					<label class="tw-cursor-pointer"><input type="radio" name="status_change" value="1"> {{ctx.Locale.Tr "repo.projects.column.status_change_close"}}</label>
+					<label class="tw-cursor-pointer"><input type="radio" name="status_change" value="2"> {{ctx.Locale.Tr "repo.projects.column.status_change_reopen"}}</label>
 				</div>
 			</div>
 			<div class="actions">

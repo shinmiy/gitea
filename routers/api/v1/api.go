@@ -1583,6 +1583,40 @@ func Routes() *web.Router {
 						Patch(reqToken(), reqRepoWriter(unit.TypeIssues, unit.TypePullRequests), bind(api.EditMilestoneOption{}), repo.EditMilestone).
 						Delete(reqToken(), reqRepoWriter(unit.TypeIssues, unit.TypePullRequests), repo.DeleteMilestone)
 				})
+				m.Group("/projects", func() {
+					m.Combo("").
+						Get(repo.ListProjects).
+						Post(reqToken(), reqRepoWriter(unit.TypeProjects), bind(api.CreateProjectOption{}), repo.CreateProject)
+					m.Group("/{id}", func() {
+						m.Combo("").
+							Get(repo.GetProject).
+							Patch(reqToken(), reqRepoWriter(unit.TypeProjects), bind(api.EditProjectOption{}), repo.EditProject).
+							Delete(reqToken(), reqRepoWriter(unit.TypeProjects), repo.DeleteProject)
+						m.Group("/columns", func() {
+							m.Combo("").
+								Get(repo.ListProjectColumns).
+								Post(reqToken(), reqRepoWriter(unit.TypeProjects), bind(api.CreateProjectColumnOption{}), repo.CreateProjectColumn)
+							m.Group("/{columnId}", func() {
+								m.Combo("").
+									Patch(reqToken(), reqRepoWriter(unit.TypeProjects), bind(api.EditProjectColumnOption{}), repo.EditProjectColumn).
+									Delete(reqToken(), reqRepoWriter(unit.TypeProjects), repo.DeleteProjectColumn)
+								m.Post("/move", reqToken(), reqRepoWriter(unit.TypeProjects), bind(api.MoveProjectColumnOption{}), repo.MoveProjectColumn)
+								m.Post("/default", reqToken(), reqRepoWriter(unit.TypeProjects), repo.SetDefaultProjectColumn)
+								m.Group("/items", func() {
+									m.Combo("").
+										Get(repo.ListColumnItems).
+										Post(reqToken(), reqRepoWriter(unit.TypeProjects), bind(api.AddProjectColumnItemOption{}), repo.AddColumnItem)
+								})
+							})
+						})
+						m.Group("/items", func() {
+							m.Group("/{itemId}", func() {
+								m.Delete("", reqToken(), reqRepoWriter(unit.TypeProjects), repo.DeleteProjectItem)
+								m.Post("/move", reqToken(), reqRepoWriter(unit.TypeProjects), bind(api.MoveProjectItemOption{}), repo.MoveProjectItem)
+							})
+						})
+					})
+				}, reqRepoReader(unit.TypeProjects))
 			}, repoAssignment(), checkTokenPublicOnly())
 		}, tokenRequiresScopes(auth_model.AccessTokenScopeCategoryIssue))
 
