@@ -5,8 +5,10 @@
 package issues
 
 import (
+	"cmp"
 	"context"
 	"fmt"
+	"math"
 	"slices"
 	"strconv"
 	"strings"
@@ -194,6 +196,58 @@ func (l *Label) ExclusiveScope() string {
 		return ""
 	}
 	return l.Name[:lastIndex]
+}
+
+// SortLabels sorts labels so that labels with the same exclusive scope are
+// grouped together. Within each scope group, labels are sorted by
+// exclusive_order then by name. Scope groups themselves are ordered by the
+// minimum exclusive_order of their members (groups whose labels all have
+// order 0 are placed last).
+func SortLabels(labels []*Label) {
+	// Build a map from scope -> minimum non-zero exclusive_order.
+	scopeMinOrder := make(map[string]int)
+	for _, l := range labels {
+		scope := l.ExclusiveScope()
+		order := l.ExclusiveOrder
+		if order == 0 {
+			order = math.MaxInt
+		}
+		if cur, ok := scopeMinOrder[scope]; !ok || order < cur {
+			scopeMinOrder[scope] = order
+		}
+	}
+
+	slices.SortStableFunc(labels, func(a, b *Label) int {
+		scopeA := a.ExclusiveScope()
+		scopeB := b.ExclusiveScope()
+
+		if scopeA != scopeB {
+			if c := cmp.Compare(scopeMinOrder[scopeA], scopeMinOrder[scopeB]); c != 0 {
+				return c
+			}
+			// Same priority: scoped labels (non-empty scope) come before non-scoped.
+			if (scopeA == "") != (scopeB == "") {
+				if scopeA == "" {
+					return 1
+				}
+				return -1
+			}
+			return cmp.Compare(scopeA, scopeB)
+		}
+
+		// Within the same scope, sort by exclusive_order (0 = last), then name.
+		orderA, orderB := a.ExclusiveOrder, b.ExclusiveOrder
+		if orderA != orderB {
+			if orderA == 0 {
+				return 1
+			}
+			if orderB == 0 {
+				return -1
+			}
+			return cmp.Compare(orderA, orderB)
+		}
+		return cmp.Compare(a.Name, b.Name)
+	})
 }
 
 // NewLabel creates a new label
@@ -386,11 +440,11 @@ func GetLabelsByRepoID(ctx context.Context, repoID int64, sortType string, listO
 
 	switch sortType {
 	case "reversealphabetically":
-		sess.Asc("exclusive_order").Desc("name")
+		sess.Desc("name")
 	case "leastissues":
-		sess.Asc("exclusive_order").Asc("num_issues")
+		sess.Asc("num_issues")
 	case "mostissues":
-		sess.Asc("exclusive_order").Desc("num_issues")
+		sess.Desc("num_issues")
 	default:
 		sess.Asc("exclusive_order").Asc("name")
 	}
@@ -461,11 +515,11 @@ func GetLabelsByOrgID(ctx context.Context, orgID int64, sortType string, listOpt
 
 	switch sortType {
 	case "reversealphabetically":
-		sess.Asc("exclusive_order").Desc("name")
+		sess.Desc("name")
 	case "leastissues":
-		sess.Asc("exclusive_order").Asc("num_issues")
+		sess.Asc("num_issues")
 	case "mostissues":
-		sess.Asc("exclusive_order").Desc("num_issues")
+		sess.Desc("num_issues")
 	default:
 		sess.Asc("exclusive_order").Asc("name")
 	}
