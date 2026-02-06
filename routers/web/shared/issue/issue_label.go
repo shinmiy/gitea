@@ -50,6 +50,8 @@ func PrepareFilterIssueLabels(ctx *context.Context, repoID int64, owner *user_mo
 		allLabels = append(allLabels, orgLabels...)
 	}
 
+	issues_model.SortLabels(allLabels)
+
 	// Get the exclusive scope for every label ID
 	labelExclusiveScopes := make([]string, 0, len(ret.SelectedLabelIDs))
 	for _, labelID := range ret.SelectedLabelIDs {
