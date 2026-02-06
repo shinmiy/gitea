@@ -372,7 +372,7 @@ func GetLabelsInRepoByIDs(ctx context.Context, repoID int64, labelIDs []int64) (
 	return labels, db.GetEngine(ctx).
 		Where("repo_id = ?", repoID).
 		In("id", labelIDs).
-		Asc("name").
+		Asc("exclusive_order").Asc("name").
 		Find(&labels)
 }
 
@@ -386,13 +386,13 @@ func GetLabelsByRepoID(ctx context.Context, repoID int64, sortType string, listO
 
 	switch sortType {
 	case "reversealphabetically":
-		sess.Desc("name")
+		sess.Asc("exclusive_order").Desc("name")
 	case "leastissues":
-		sess.Asc("num_issues")
+		sess.Asc("exclusive_order").Asc("num_issues")
 	case "mostissues":
-		sess.Desc("num_issues")
+		sess.Asc("exclusive_order").Desc("num_issues")
 	default:
-		sess.Asc("name")
+		sess.Asc("exclusive_order").Asc("name")
 	}
 
 	if listOptions.Page > 0 {
@@ -447,7 +447,7 @@ func GetLabelsInOrgByIDs(ctx context.Context, orgID int64, labelIDs []int64) ([]
 	return labels, db.GetEngine(ctx).
 		Where("org_id = ?", orgID).
 		In("id", labelIDs).
-		Asc("name").
+		Asc("exclusive_order").Asc("name").
 		Find(&labels)
 }
 
@@ -461,13 +461,13 @@ func GetLabelsByOrgID(ctx context.Context, orgID int64, sortType string, listOpt
 
 	switch sortType {
 	case "reversealphabetically":
-		sess.Desc("name")
+		sess.Asc("exclusive_order").Desc("name")
 	case "leastissues":
-		sess.Asc("num_issues")
+		sess.Asc("exclusive_order").Asc("num_issues")
 	case "mostissues":
-		sess.Desc("num_issues")
+		sess.Asc("exclusive_order").Desc("num_issues")
 	default:
-		sess.Asc("name")
+		sess.Asc("exclusive_order").Asc("name")
 	}
 
 	if listOptions.Page > 0 {
